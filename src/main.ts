@@ -1,68 +1,57 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import hbs from 'hbs';
+import { AppModule } from './app.module.js';
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const session = require('express-session');
-import passport from 'passport';
-import hbs from 'hbs';
-import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './filters/http-exception.filter';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const passport = require('passport');
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // View engine setup (Handlebars)
-  const viewsDir = join(__dirname, '..', 'views');
-  app.setBaseViewsDir(viewsDir);
+  // Setup view engine pakai Handlebars
+  app.setBaseViewsDir(join(__dirname, '..', 'views'));
   app.setViewEngine('hbs');
+  hbs.registerPartials(join(__dirname, '..', 'views', 'partials'));
 
-  // Configure default layout
+  // Set default layout
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.set('view options', { layout: 'layouts/main' });
 
-  hbs.registerPartials(join(viewsDir, 'partials'));
-
-  // Register Handlebars helpers
-  hbs.registerHelper('eq', (a: any, b: any) => a == b);
+  // Helper Handlebars untuk format harga
   hbs.registerHelper('formatPrice', (price: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(price);
-  });
-  hbs.registerHelper('formatDate', (date: Date) => {
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  });
-  hbs.registerHelper('selected', (a: any, b: any) => {
-    return a == b ? 'selected' : '';
+    return 'Rp ' + Number(price).toLocaleString('id-ID');
   });
 
-  // Static files
+  // Helper untuk format tanggal
+  hbs.registerHelper('formatDate', (date: Date) => {
+    return new Date(date).toLocaleDateString('id-ID');
+  });
+
+  // Helper untuk cek selected di dropdown
+  hbs.registerHelper('eq', (a: any, b: any) => a == b);
+  hbs.registerHelper('selected', (a: any, b: any) => (a == b ? 'selected' : ''));
+
+  // Serve file statis (CSS, gambar, dll)
   app.useStaticAssets(join(__dirname, '..', 'public'));
 
-  // Session middleware
+  // Setup session
   app.use(
     session({
-      secret: 'nestjs-admin-panel-secret-key-2024',
+      secret: 'admin-panel-secret',
       resave: false,
       saveUninitialized: false,
-      cookie: { maxAge: 3600000 }, // 1 hour
     }),
   );
 
-  // Passport
+  // Setup passport untuk autentikasi
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Global exception filter
-  app.useGlobalFilters(new HttpExceptionFilter());
-
   await app.listen(3000);
-  console.log('🚀 Application running on http://localhost:3000');
+  console.log('Server berjalan di http://localhost:3000');
 }
 bootstrap();

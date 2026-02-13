@@ -1,22 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './entities/user.entity';
-import { Category } from './entities/category.entity';
-import { Product } from './entities/product.entity';
-import { AuthModule } from './auth/auth.module';
-import { CategoryModule } from './category/category.module';
-import { ProductModule } from './product/product.module';
-import { SeedModule } from './seed/seed.module';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { User } from './entities/user.entity.js';
+import { Category } from './entities/category.entity.js';
+import { Product } from './entities/product.entity.js';
+import { AuthModule } from './auth/auth.module.js';
+import { CategoryModule } from './category/category.module.js';
+import { ProductModule } from './product/product.module.js';
+import { SeedModule } from './seed/seed.module.js';
+import { AppController } from './app.controller.js';
 
 @Module({
   imports: [
+    // Koneksi database SQLite
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'database.sqlite',
       entities: [User, Category, Product],
-      synchronize: true,
+      synchronize: true, // otomatis buat tabel
     }),
     AuthModule,
     CategoryModule,
@@ -24,6 +24,5 @@ import { AppService } from './app.service';
     SeedModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule { }

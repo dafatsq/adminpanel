@@ -1,89 +1,62 @@
-<div class="row">
-    <div class="col-lg-8">
-        <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-tag-fill"></i> Detail Kategori</span>
-                <div class="btn-group btn-group-sm">
-                    <a href="/categories/{{category.id}}/edit" class="btn btn-warning"><i class="bi bi-pencil"></i>
-                        Edit</a>
-                    <form method="POST" action="/categories/{{category.id}}/delete" style="display:inline"
-                        onsubmit="return confirm('Yakin hapus kategori ini?')">
-                        <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i> Hapus</button>
-                    </form>
-                </div>
-            </div>
-            <div class="card-body">
-                <table class="table table-borderless mb-0">
-                    <tr>
-                        <th style="width:150px">ID</th>
-                        <td>{{category.id}}</td>
-                    </tr>
-                    <tr>
-                        <th>Nama</th>
-                        <td class="fw-semibold">{{category.name}}</td>
-                    </tr>
-                    <tr>
-                        <th>Deskripsi</th>
-                        <td>{{category.description}}</td>
-                    </tr>
-                    <tr>
-                        <th>Tanggal Dibuat</th>
-                        <td>{{formatDate category.createdAt}}</td>
-                    </tr>
-                    <tr>
-                        <th>Terakhir Diubah</th>
-                        <td>{{formatDate category.updatedAt}}</td>
-                    </tr>
-                    <tr>
-                        <th>Jumlah Produk</th>
-                        <td><span class="badge bg-primary">{{category.products.length}} produk</span></td>
-                    </tr>
-                </table>
-            </div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between">
+        <h5 class="mb-0">Detail Kategori</h5>
+        <div>
+            <a href="/categories/{{ category.id }}/edit" class="btn btn-sm btn-warning">Edit</a>
+            <a href="/categories" class="btn btn-sm btn-secondary">Kembali</a>
         </div>
+    </div>
+    <div class="card-body">
+        <table class="table">
+            <tr>
+                <th width="200">ID</th>
+                <td>{{ category.id }}</td>
+            </tr>
+            <tr>
+                <th>Nama</th>
+                <td>{{ category.name }}</td>
+            </tr>
+            <tr>
+                <th>Deskripsi</th>
+                <td>{{ category.description }}</td>
+            </tr>
+            <tr>
+                <th>Tanggal Dibuat</th>
+                <td>{{ formatDate category.createdAt }}</td>
+            </tr>
+            <tr>
+                <th>Terakhir Diupdate</th>
+                <td>{{ formatDate category.updatedAt }}</td>
+            </tr>
+        </table>
     </div>
 </div>
 
+<!-- Produk dalam kategori ini -->
 {{#if category.products.length}}
-<div class="card">
+<div class="card mt-3">
     <div class="card-header">
-        <i class="bi bi-box-seam-fill"></i> Produk dalam Kategori "{{category.name}}"
+        <h6 class="mb-0">Produk di Kategori Ini ({{ category.products.length }})</h6>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nama Produk</th>
-                        <th>Harga</th>
-                        <th>Stok</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each category.products}}
-                    <tr>
-                        <td>{{this.id}}</td>
-                        <td><a href="/products/{{this.id}}" class="text-decoration-none fw-semibold">{{this.name}}</a>
-                        </td>
-                        <td>{{formatPrice this.price}}</td>
-                        <td>{{this.stock}}</td>
-                        <td>
-                            <a href="/products/{{this.id}}" class="btn btn-sm btn-outline-info"><i
-                                    class="bi bi-eye"></i></a>
-                            <a href="/products/{{this.id}}/edit" class="btn btn-sm btn-outline-warning"><i
-                                    class="bi bi-pencil"></i></a>
-                        </td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each category.products}}
+                <tr>
+                    <td><a href="/products/{{ this.id }}">{{ this.name }}</a></td>
+                    <td>{{ formatPrice this.price }}</td>
+                    <td>{{ this.stock }}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
     </div>
 </div>
 {{/if}}
-
-<div class="mt-3">
-    <a href="/categories" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Kembali ke Daftar</a>
-</div>

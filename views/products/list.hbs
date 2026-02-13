@@ -1,78 +1,60 @@
 {{#if success}}
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    <i class="bi bi-check-circle-fill"></i> {{success}}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
+<div class="alert alert-success">{{ success }}</div>
 {{/if}}
 
 <div class="card">
-    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span><i class="bi bi-box-seam-fill"></i> Daftar Produk</span>
-        <div class="d-flex gap-2 flex-wrap">
-            <form method="GET" action="/products" class="search-box">
-                <i class="bi bi-search"></i>
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Daftar Produk</h5>
+        <div class="d-flex gap-2">
+            <form method="GET" action="/products" class="d-flex">
                 <input type="text" name="search" class="form-control form-control-sm" placeholder="Cari produk..."
-                    value="{{search}}">
+                    value="{{ search }}">
+                <button type="submit" class="btn btn-sm btn-outline-primary ms-2">Cari</button>
             </form>
-            <a href="/products/create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg"></i> Tambah
-            </a>
+            <a href="/products/create" class="btn btn-sm btn-primary">+ Tambah</a>
         </div>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th style="width:60px">#</th>
-                        <th>Nama</th>
-                        <th>Kategori</th>
-                        <th>Harga</th>
-                        <th>Stok</th>
-                        <th>Tanggal Dibuat</th>
-                        <th style="width:150px">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each products}}
-                    <tr>
-                        <td>{{this.id}}</td>
-                        <td><a href="/products/{{this.id}}" class="text-decoration-none fw-semibold">{{this.name}}</a>
-                        </td>
-                        <td><span class="badge-category">{{this.category.name}}</span></td>
-                        <td>{{formatPrice this.price}}</td>
-                        <td>
-                            {{#if (eq this.stock 0)}}
-                            <span class="badge bg-danger">Habis</span>
-                            {{else}}
-                            {{this.stock}}
-                            {{/if}}
-                        </td>
-                        <td>{{formatDate this.createdAt}}</td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="/products/{{this.id}}" class="btn btn-outline-info" title="Detail"><i
-                                        class="bi bi-eye"></i></a>
-                                <a href="/products/{{this.id}}/edit" class="btn btn-outline-warning" title="Edit"><i
-                                        class="bi bi-pencil"></i></a>
-                                <form method="POST" action="/products/{{this.id}}/delete" style="display:inline"
-                                    onsubmit="return confirm('Yakin hapus produk ini?')">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Hapus"><i
-                                            class="bi bi-trash"></i></button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    {{/each}}
-                    {{#unless products.length}}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            {{#if search}}Tidak ada produk yang cocok dengan "{{search}}"{{else}}Belum ada produk{{/if}}
-                        </td>
-                    </tr>
-                    {{/unless}}
-                </tbody>
-            </table>
-        </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Nama</th>
+                    <th>Kategori</th>
+                    <th>Harga</th>
+                    <th>Stok</th>
+                    <th>Tanggal Dibuat</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each products}}
+                <tr>
+                    <td>{{ this.id }}</td>
+                    <td>{{ this.name }}</td>
+                    <td>
+                        {{#if this.category}}
+                        <span class="badge bg-secondary">{{ this.category.name }}</span>
+                        {{/if}}
+                    </td>
+                    <td>{{ formatPrice this.price }}</td>
+                    <td>{{ this.stock }}</td>
+                    <td>{{ formatDate this.createdAt }}</td>
+                    <td>
+                        <a href="/products/{{ this.id }}" class="btn btn-sm btn-info">Detail</a>
+                        <a href="/products/{{ this.id }}/edit" class="btn btn-sm btn-warning">Edit</a>
+                        <form method="POST" action="/products/{{ this.id }}/delete" class="d-inline"
+                            onsubmit="return confirm('Yakin hapus?')">
+                            <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
+                        </form>
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+        {{#unless products.length}}
+        <p class="text-center text-muted">Tidak ada data produk</p>
+        {{/unless}}
     </div>
 </div>

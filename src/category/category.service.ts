@@ -1,52 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
-import { Category } from '../entities/category.entity';
-import { CreateCategoryDto } from './dto/create-category.dto';
+import { Category } from '../entities/category.entity.js';
 
 @Injectable()
 export class CategoryService {
     constructor(
         @InjectRepository(Category)
-        private readonly categoryRepository: Repository<Category>,
+        private categoryRepo: Repository<Category>,
     ) { }
 
-    async findAll(search?: string): Promise<Category[]> {
+    // Ambil semua kategori (bisa filter pakai search)
+    async findAll(search?: string) {
         if (search) {
-            return this.categoryRepository.find({
+            return this.categoryRepo.find({
                 where: { name: Like(`%${search}%`) },
                 relations: ['products'],
-                order: { createdAt: 'DESC' },
             });
         }
-        return this.categoryRepository.find({
-            relations: ['products'],
-            order: { createdAt: 'DESC' },
-        });
+        return this.categoryRepo.find({ relations: ['products'] });
     }
 
-    async findOne(id: number): Promise<Category | null> {
-        return this.categoryRepository.findOne({
+    // Ambil satu kategori berdasarkan ID
+    async findOne(id: number) {
+        return this.categoryRepo.findOne({
             where: { id },
             relations: ['products'],
         });
     }
 
-    async create(dto: CreateCategoryDto): Promise<Category> {
-        const category = this.categoryRepository.create(dto);
-        return this.categoryRepository.save(category);
+    // Buat kategori baru
+    async create(data: { name: string; description?: string }) {
+        const category = this.categoryRepo.create(data);
+        return this.categoryRepo.save(category);
     }
 
-    async update(id: number, dto: CreateCategoryDto): Promise<Category> {
-        await this.categoryRepository.update(id, dto);
-        return this.findOne(id) as Promise<Category>;
+    // Update kategori
+    async update(id: number, data: { name?: string; description?: string }) {
+        await this.categoryRepo.update(id, data);
+        return this.findOne(id);
     }
 
-    async remove(id: number): Promise<void> {
-        await this.categoryRepository.delete(id);
+    // Hapus kategori
+    async remove(id: number) {
+        return this.categoryRepo.delete(id);
     }
 
-    async count(): Promise<number> {
-        return this.categoryRepository.count();
+    // Hitung total kategori
+    async count() {
+        return this.categoryRepo.count();
     }
 }

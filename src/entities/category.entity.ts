@@ -6,7 +6,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
 } from 'typeorm';
-import { Product } from './product.entity';
+import { Product } from './product.entity.js';
 
 @Entity()
 export class Category {
@@ -25,6 +25,7 @@ export class Category {
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @OneToMany(() => Product, (product) => product.category, { cascade: true })
+    // Relasi: satu kategori punya banyak produk
+    @OneToMany(() => Product, (product) => product.category)
     products: Product[];
 }

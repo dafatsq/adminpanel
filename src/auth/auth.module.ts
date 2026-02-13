@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from '../entities/user.entity';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { LocalStrategy } from './local.strategy';
-import { SessionSerializer } from './session.serializer';
+import { User } from '../entities/user.entity.js';
+import { AuthService } from './auth.service.js';
+import { AuthController } from './auth.controller.js';
+import { LocalStrategy } from './local.strategy.js';
+import { SessionSerializer } from './session.serializer.js';
 
 @Module({
     imports: [

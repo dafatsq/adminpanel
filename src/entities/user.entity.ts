@@ -9,7 +9,7 @@ export class User {
   username: string;
 
   @Column()
-  password: string;
+  password: string; // disimpan dalam bentuk hash bcrypt
 
   @Column()
   fullName: string;

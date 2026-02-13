@@ -2,155 +2,151 @@ import {
     Controller,
     Get,
     Post,
+    Req,
+    Res,
     Param,
     Body,
     Query,
-    Res,
-    Req,
     UseGuards,
-    ParseIntPipe,
-    HttpException,
-    HttpStatus,
 } from '@nestjs/common';
 import * as express from 'express';
-import { CategoryService } from './category.service';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
-import { validate } from 'class-validator';
-import { plainToInstance } from 'class-transformer';
+import { AuthenticatedGuard } from '../auth/guards/authenticated.guard.js';
+import { CategoryService } from './category.service.js';
 
 @Controller('categories')
-@UseGuards(AuthenticatedGuard)
 export class CategoryController {
-    constructor(private readonly categoryService: CategoryService) { }
+    constructor(private categoryService: CategoryService) { }
 
+    // Halaman daftar kategori
     @Get()
     async list(
         @Query('search') search: string,
         @Req() req: express.Request,
         @Res() res: express.Response,
     ) {
+        if (!req.isAuthenticated()) return res.redirect('/login');
+
         const categories = await this.categoryService.findAll(search);
         return res.render('categories/list', {
             title: 'Daftar Kategori',
             categories,
-            search: search || '',
+            search,
             user: req.user,
             success: req.query.success || null,
         });
     }
 
+    // Halaman form tambah kategori
     @Get('create')
-    async createForm(@Req() req: express.Request, @Res() res: express.Response) {
+    createForm(@Req() req: express.Request, @Res() res: express.Response) {
+        if (!req.isAuthenticated()) return res.redirect('/login');
+
         return res.render('categories/form', {
             title: 'Tambah Kategori',
             category: null,
-            errors: null,
             user: req.user,
+            errors: null,
         });
     }
 
+    // Simpan kategori baru
     @Post()
     async create(
         @Body() body: any,
         @Req() req: express.Request,
         @Res() res: express.Response,
     ) {
-        const dto = plainToInstance(CreateCategoryDto, body);
-        const errors = await validate(dto);
+        if (!req.isAuthenticated()) return res.redirect('/login');
 
-        if (errors.length > 0) {
-            const errorMessages = errors.map((e) =>
-                Object.values(e.constraints || {}).join(', '),
-            );
+        // Validasi sederhana
+        if (!body.name || body.name.trim() === '') {
             return res.render('categories/form', {
                 title: 'Tambah Kategori',
                 category: body,
-                errors: errorMessages,
                 user: req.user,
+                errors: ['Nama kategori harus diisi'],
             });
         }
 
-        await this.categoryService.create(dto);
+        await this.categoryService.create({
+            name: body.name,
+            description: body.description,
+        });
         return res.redirect('/categories?success=Kategori berhasil ditambahkan');
     }
 
+    // Halaman detail kategori
     @Get(':id')
     async detail(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id') id: string,
         @Req() req: express.Request,
         @Res() res: express.Response,
     ) {
-        const category = await this.categoryService.findOne(id);
+        if (!req.isAuthenticated()) return res.redirect('/login');
+
+        const category = await this.categoryService.findOne(Number(id));
         if (!category) {
-            throw new HttpException('Kategori tidak ditemukan', HttpStatus.NOT_FOUND);
+            return res.redirect('/categories');
         }
         return res.render('categories/detail', {
-            title: `Kategori: ${category.name}`,
+            title: 'Detail Kategori',
             category,
             user: req.user,
         });
     }
 
+    // Halaman form edit kategori
     @Get(':id/edit')
     async editForm(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id') id: string,
         @Req() req: express.Request,
         @Res() res: express.Response,
     ) {
-        const category = await this.categoryService.findOne(id);
+        if (!req.isAuthenticated()) return res.redirect('/login');
+
+        const category = await this.categoryService.findOne(Number(id));
         if (!category) {
-            throw new HttpException('Kategori tidak ditemukan', HttpStatus.NOT_FOUND);
+            return res.redirect('/categories');
         }
         return res.render('categories/form', {
             title: 'Edit Kategori',
             category,
-            errors: null,
             user: req.user,
+            errors: null,
         });
     }
 
+    // Update kategori
     @Post(':id')
     async update(
-        @Param('id', ParseIntPipe) id: number,
+        @Param('id') id: string,
         @Body() body: any,
         @Req() req: express.Request,
         @Res() res: express.Response,
     ) {
-        const dto = plainToInstance(CreateCategoryDto, body);
-        const errors = await validate(dto);
-
-        if (errors.length > 0) {
-            const errorMessages = errors.map((e) =>
-                Object.values(e.constraints || {}).join(', '),
-            );
+        if (!body.name || body.name.trim() === '') {
+            const category = await this.categoryService.findOne(Number(id));
             return res.render('categories/form', {
                 title: 'Edit Kategori',
-                category: { ...body, id },
-                errors: errorMessages,
+                category: { ...category, ...body },
                 user: req.user,
+                errors: ['Nama kategori harus diisi'],
             });
         }
 
-        const existing = await this.categoryService.findOne(id);
-        if (!existing) {
-            throw new HttpException('Kategori tidak ditemukan', HttpStatus.NOT_FOUND);
-        }
-
-        await this.categoryService.update(id, dto);
-        return res.redirect('/categories?success=Kategori berhasil diperbarui');
+        await this.categoryService.update(Number(id), {
+            name: body.name,
+            description: body.description,
+        });
+        return res.redirect('/categories?success=Kategori berhasil diupdate');
     }
 
+    // Hapus kategori
     @Post(':id/delete')
-    async remove(
-        @Param('id', ParseIntPipe) id: number,
-        @Res() res: express.Response,
-    ) {
-        const existing = await this.categoryService.findOne(id);
-        if (!existing) {
-            throw new HttpException('Kategori tidak ditemukan', HttpStatus.NOT_FOUND);
-        }
-        await this.categoryService.remove(id);
+    async remove(@Param('id') id: string, @Req() req: express.Request, @Res() res: express.Response) {
+        if (!req.isAuthenticated()) return res.redirect('/login');
+
+        await this.categoryService.remove(Number(id));
         return res.redirect('/categories?success=Kategori berhasil dihapus');
     }
 }

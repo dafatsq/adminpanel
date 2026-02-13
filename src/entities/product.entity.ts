@@ -7,7 +7,7 @@ import {
     UpdateDateColumn,
     JoinColumn,
 } from 'typeorm';
-import { Category } from './category.entity';
+import { Category } from './category.entity.js';
 
 @Entity()
 export class Product {
@@ -20,7 +20,7 @@ export class Product {
     @Column({ type: 'text', nullable: true })
     description: string;
 
-    @Column({ type: 'decimal', precision: 10, scale: 2 })
+    @Column({ type: 'decimal', default: 0 })
     price: number;
 
     @Column({ type: 'int', default: 0 })
@@ -35,6 +35,7 @@ export class Product {
     @UpdateDateColumn()
     updatedAt: Date;
 
+    // Relasi: banyak produk milik satu kategori
     @ManyToOne(() => Category, (category) => category.products, {
         onDelete: 'CASCADE',
     })

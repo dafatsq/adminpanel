@@ -1,40 +1,29 @@
-<div class="row justify-content-center">
-    <div class="col-lg-6">
-        <div class="card">
-            <div class="card-header">
-                <i class="bi bi-tag-fill"></i> {{title}}
-            </div>
-            <div class="card-body">
-                {{#if errors}}
-                <div class="alert alert-danger">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <strong>Validasi gagal:</strong>
-                    <ul class="mb-0 mt-1">
-                        {{#each errors}}
-                        <li>{{this}}</li>
-                        {{/each}}
-                    </ul>
-                </div>
-                {{/if}}
-
-                <form method="POST" action="{{#if category.id}}/categories/{{category.id}}{{else}}/categories{{/if}}">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Nama Kategori <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="name" name="name" value="{{category.name}}"
-                            required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Deskripsi</label>
-                        <textarea class="form-control" id="description" name="description"
-                            rows="3">{{category.description}}</textarea>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-check-lg"></i> {{#if category.id}}Perbarui{{else}}Simpan{{/if}}
-                        </button>
-                        <a href="/categories" class="btn btn-outline-secondary">Batal</a>
-                    </div>
-                </form>
-            </div>
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">{{#if category}}Edit Kategori{{else}}Tambah Kategori{{/if}}</h5>
+    </div>
+    <div class="card-body">
+        {{#if errors}}
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                {{#each errors}}
+                <li>{{ this }}</li>
+                {{/each}}
+            </ul>
         </div>
+        {{/if}}
+
+        <form method="POST" action="{{#if category.id}}/categories/{{ category.id }}{{else}}/categories{{/if}}">
+            <div class="mb-3">
+                <label class="form-label">Nama Kategori *</label>
+                <input type="text" name="name" class="form-control" value="{{ category.name }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Deskripsi</label>
+                <textarea name="description" class="form-control" rows="3">{{ category.description }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Simpan</button>
+            <a href="/categories" class="btn btn-secondary">Batal</a>
+        </form>
     </div>
 </div>
