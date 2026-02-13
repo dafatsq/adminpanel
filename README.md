@@ -10,8 +10,8 @@ Admin panel untuk manajemen data **Kategori** dan **Produk** dengan fitur autent
 - ✅ **Relasi One-to-Many** — Satu kategori memiliki banyak produk
 - ✅ **Pencarian** — Fitur search pada halaman kategori dan produk
 - ✅ **MVC Pattern** — Model (Entity + Service), View (Handlebars), Controller
-- ✅ **Error Handling** — Global exception filter, validasi form, halaman error
-- ✅ **Responsive UI** — Desain modern dengan sidebar navigation
+- ✅ **Error Handling** — Validasi form, redirect handling, user-friendly error messages
+- ✅ **Responsive UI** — Bootstrap 5 dengan dark sidebar navigation
 
 ## Desain Database
 
@@ -52,8 +52,11 @@ Admin panel untuk manajemen data **Kategori** dan **Produk** dengan fitur autent
 ### Dashboard
 ![Dashboard](screenshots/dashboard.png)
 
+### Daftar Kategori
+![Categories List](screenshots/category.png)
+
 ### Daftar Produk
-![Products List](screenshots/products-list.png)
+![Products List](screenshots/products.png)
 
 ## Arsitektur MVC
 
@@ -66,15 +69,11 @@ src/
 ├── category/
 │   ├── category.module.ts
 │   ├── category.service.ts    # MODEL — Business logic & data access
-│   ├── category.controller.ts # CONTROLLER — Route handling
-│   └── dto/
-│       └── create-category.dto.ts
+│   └── category.controller.ts # CONTROLLER — Route handling
 ├── product/
 │   ├── product.module.ts
 │   ├── product.service.ts     # MODEL — Business logic & data access
-│   ├── product.controller.ts  # CONTROLLER — Route handling
-│   └── dto/
-│       └── create-product.dto.ts
+│   └── product.controller.ts  # CONTROLLER — Route handling
 ├── auth/                      # Authentication module
 │   ├── auth.module.ts
 │   ├── auth.service.ts
@@ -82,11 +81,11 @@ src/
 │   ├── local.strategy.ts
 │   ├── session.serializer.ts
 │   └── guards/
+│       ├── authenticated.guard.ts
+│       └── login.guard.ts
 ├── seed/                      # Database seeder
 │   ├── seed.module.ts
 │   └── seed.service.ts
-├── filters/
-│   └── http-exception.filter.ts  # Global error handling
 ├── app.module.ts
 ├── app.controller.ts          # Dashboard controller
 └── main.ts                    # Bootstrap & configuration
@@ -121,8 +120,6 @@ views/                         # VIEW — Handlebars templates
 | `bcrypt` | ^5.x | Password hashing |
 | `hbs` | ^4.x | Handlebars view engine |
 | `express-session` | ^1.x | Session management |
-| `class-validator` | ^0.14.x | DTO validation |
-| `class-transformer` | ^0.5.x | DTO transformation |
 
 ## Cara Menjalankan
 
@@ -134,14 +131,17 @@ views/                         # VIEW — Handlebars templates
 
 ```bash
 # Clone repository
-git clone <repository-url>
-cd challenge
+git clone https://github.com/dafatsq/adminpanel.git
+cd adminpanel
 
 # Install dependencies
 npm install
 
 # Jalankan dalam mode development
 npm run start:dev
+
+# Atau mode production
+npm start
 ```
 
 Aplikasi akan berjalan di **http://localhost:3000**
@@ -150,7 +150,7 @@ Aplikasi akan berjalan di **http://localhost:3000**
 - **Username:** `admin`
 - **Password:** `admin123`
 
-## API Endpoints
+## Endpoints
 
 | Method | URL | Deskripsi |
 |--------|-----|-----------|
@@ -159,6 +159,7 @@ Aplikasi akan berjalan di **http://localhost:3000**
 | GET | `/logout` | Logout |
 | GET | `/` | Dashboard |
 | GET | `/categories` | Daftar kategori |
+| GET | `/categories?search=keyword` | Pencarian kategori |
 | GET | `/categories/create` | Form tambah kategori |
 | POST | `/categories` | Simpan kategori baru |
 | GET | `/categories/:id` | Detail kategori |
@@ -166,6 +167,7 @@ Aplikasi akan berjalan di **http://localhost:3000**
 | POST | `/categories/:id` | Update kategori |
 | POST | `/categories/:id/delete` | Hapus kategori |
 | GET | `/products` | Daftar produk |
+| GET | `/products?search=keyword` | Pencarian produk |
 | GET | `/products/create` | Form tambah produk |
 | POST | `/products` | Simpan produk baru |
 | GET | `/products/:id` | Detail produk |
@@ -173,29 +175,121 @@ Aplikasi akan berjalan di **http://localhost:3000**
 | POST | `/products/:id` | Update produk |
 | POST | `/products/:id/delete` | Hapus produk |
 
-> **Pencarian:** Tambahkan query parameter `?search=keyword` pada endpoint list kategori/produk.
+> **Catatan:** Semua endpoint mengembalikan **HTML pages** (MVC pattern), bukan JSON API.
+
+## Implementasi MVC Pattern
+
+### 1. Model Layer
+- **Entities:** Definisi struktur tabel database (`user.entity.ts`, `category.entity.ts`, `product.entity.ts`)
+- **Services:** Business logic dan data access (`category.service.ts`, `product.service.ts`, `auth.service.ts`)
+
+### 2. View Layer
+- **Templates:** Handlebars files (`.hbs`) di folder `views/`
+- **Layout:** Main layout dengan sidebar navigation
+- **Components:** Login, dashboard, categories, products
+
+### 3. Controller Layer
+- **Controllers:** Handle HTTP requests, call services, render views
+- **Route mapping:** `@Get()`, `@Post()` decorators
+- **Request handling:** `@Req()`, `@Res()`, `@Param()`, `@Query()`, `@Body()`
 
 ## Error Handling
 
-1. **Global Exception Filter** (`HttpExceptionFilter`) — menangkap semua exception dan merender halaman error
-2. **Validation** — menggunakan `class-validator` pada DTO, error ditampilkan di form
-3. **404 Not Found** — halaman error untuk resource yang tidak ditemukan
-4. **401/403 Unauthorized** — redirect otomatis ke halaman login
-5. **500 Server Error** — halaman error generik untuk kesalahan server
+### 1. Authentication Errors
+- **Login gagal:** Redirect ke `/login?error=Username atau password salah`
+- **Belum login:** Redirect ke `/login` (tidak menampilkan 403 JSON)
+
+### 2. Validation Errors
+- **Form validation:** Inline checks dengan error messages
+- **Error display:** Red alert di atas form dengan daftar errors
+- **Form preservation:** Input user tetap terisi saat validation gagal
+
+### 3. Not Found Errors
+- **Data tidak ditemukan:** Redirect ke list page
+- **Graceful handling:** Tidak menampilkan raw 404 error
+
+### 4. Success Messages
+- **Flash messages:** Query string `?success=...`
+- **Green alerts:** Ditampilkan di list pages
+
+## Fitur Pencarian
+
+Implementasi search menggunakan TypeORM `Like()`:
+
+```typescript
+// Di Service Layer
+async findAll(search?: string) {
+  if (search) {
+    return this.repository.find({
+      where: [
+        { name: Like(`%${search}%`) },
+        { description: Like(`%${search}%`) },
+      ],
+      relations: ['products'], // atau ['category'] untuk products
+    });
+  }
+  return this.repository.find({ relations: [...] });
+}
+```
+
+Search dilakukan di kolom **name** dan **description** untuk kategori maupun produk.
 
 ## Teknologi
 
-- **Runtime:** Node.js
+- **Runtime:** Node.js 18+
 - **Framework:** NestJS 11 (TypeScript)
 - **Database:** SQLite (via TypeORM)
 - **View Engine:** Handlebars (HBS)
-- **Auth:** Passport.js (Local Strategy + Sessions)
-- **Styling:** Bootstrap 5 + Bootstrap Icons + Custom CSS
+- **Authentication:** Passport.js (Local Strategy + Sessions)
+- **Styling:** Bootstrap 5 + Bootstrap Icons
+- **Password Hashing:** bcrypt
 
 ## Catatan untuk Developer
 
 - Database menggunakan **SQLite** (`database.sqlite`) yang otomatis dibuat saat pertama kali dijalankan
-- Seed data otomatis diisi saat pertama kali (1 admin, 5 kategori, 15 produk)
+- **Seed data** otomatis terisi saat startup (1 admin user, 5 kategori, 15 produk)
 - Hapus file `database.sqlite` untuk reset database
-- Session disimpan di memory (restart server = session hilang)
-- Pattern MVC: Entity + Service = Model, Controller = Controller, `.hbs` = View
+- Session disimpan di **memory** (restart server = logout semua user)
+- Pattern MVC: Entity + Service = **Model**, Controller = **Controller**, `.hbs` files = **View**
+- Semua responses berbentuk **HTML pages** atau **redirects**, bukan JSON API
+- File `database.sqlite` dan `node_modules/` sudah masuk `.gitignore`
+
+## Development
+
+```bash
+# Development mode dengan auto-reload
+npm run start:dev
+
+# Production mode
+npm run build
+npm start
+
+# Reset database (hapus file database)
+rm database.sqlite
+# Kemudian restart server untuk reseed
+```
+
+## Struktur Database Seed
+
+### Users
+- 1 admin user (`admin` / `admin123`)
+
+### Categories (5)
+1. Elektronik
+2. Pakaian
+3. Makanan & Minuman
+4. Olahraga
+5. Buku
+
+### Products (15)
+- 3 produk per kategori
+- Harga range: Rp 25,000 - Rp 15,000,000
+- Stok range: 10 - 500 unit
+
+## License
+
+MIT
+
+## Author
+
+Developed as a technical challenge for DOT Indonesia internship.
